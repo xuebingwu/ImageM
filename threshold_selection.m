@@ -1,0 +1,152 @@
+function [num_dots,locations,threshold]=threshold_selection(handles,thresholds,thresholdfn,ims,ims2,BW,width,offset,proj_method,enhance_method)
+
+% [num_dots,locations]=process_file_threshold_selection(thresholds,thresholdfn,ims,ims2,BW)
+% 20/11/09 Shalev
+% Allows the user to choose the appropriate threshold. Receives the cropped
+% original image - ims, and the LOG filtered image - ims2.
+
+if ~isempty(BW)
+    USE_ERODE_MASK=1;
+    n_stack=size(ims2,3);
+    ERODE_MASK_SIZE=20;
+
+    if USE_ERODE_MASK,
+        BW2=imerode(BW,strel('square',ERODE_MASK_SIZE));
+        for kk=1:n_stack,
+            ims2(:,:,kk)=ims2(:,:,kk).*BW2;
+        end
+    end
+    for kk=1:n_stack,
+        temp=ims2(:,:,kk);
+        temp(temp==0)=min(min(temp(temp~=0)));
+        ims2(:,:,kk)=temp;
+    end
+end
+
+% Now ask the user to select a threshold and animate the resulting image
+[t nc cv]= auto_thresholding(thresholds,thresholdfn,width,offset);
+y = nc;
+x=thresholds(t);
+bwl = ims2 > x;
+[lab,num_dots] = bwlabeln(bwl);
+locations=regionprops(lab,'centroid');
+for i=1:length(locations),coor(i,:)=locations(i).Centroid;end
+locations=coor;
+
+screen_size = get(0, 'ScreenSize');
+figure;
+set(gcf, 'Position', [0 0 screen_size(3) screen_size(4) ] );
+
+%datacursormode on
+
+h1=subplot('Position',[0.1 0.55 0.25 0.35]);
+plot(thresholds,thresholdfn);ylabel('Number of dots');xlabel('Threshold');
+axis([0 inf 0 1000])
+title('automatic thresholding')
+line([t/100 t/100],ylim,'Color','r');
+        hold on;
+        hxy = plot(x,y,'r+');        
+        htip = text(x,y,[' (' num2str(x,'%10.2f') ',' num2str(y) ')']);
+        hold off;
+                
+    h2=subplot('Position',[0.1 0.1 0.25 0.35]);
+    plot(thresholds,cv);
+    hold on;
+    plot(t/100,cv(t),'r*');
+    xlabel(['default threshold=' num2str(t/100) ', ' 'num. of dots=' num2str(nc)])
+    ylabel('inverse of coefficient variation')
+    hold off
+
+    im0=zprojection(ims,proj_method);
+    %im0=enhance_image(im0,enhance_method);
+
+    h3=subplot('Position',[0.4 0.1 0.5 0.8]);
+    imagesc(im0);axis square;colormap gray;axis off; 
+    title('click at appropriate x/threshold value at top left figure, or press any key to exit');drawnow;
+    hold on;
+    for i=1:2,
+        h4=plot(locations(:,1),locations(:,2),'o','MarkerSize',4);  
+        pause(0.2);
+        delete(h4);
+        pause(0.2);        
+    end
+    h4=plot(locations(:,1),locations(:,2),'o','MarkerSize',4); 
+    hold off
+
+go_on=1; % As the long as the user is not satisfied
+while go_on    
+    %clear locations bwl SelectionType CurrentPoint
+        UserInput=2;
+        while UserInput == 2
+            UserInput = waitforbuttonpress;      % Wait for click
+        end
+        
+        if UserInput == 1
+        
+%        selection = questdlg('Happy with this?','Happy with this?','Yes','No','Yes');
+%        if strcmp(selection,'Yes')
+            go_on=0;      
+            title('closing this window ...');drawnow;
+            close
+            figure(handles.figure1);
+             
+            %title('Start to process next image...','FontSize',18,'Color','r');drawnow;
+            threshold=thresholds(round(x*100));
+            bwl = ims2 > threshold;
+            [lab,num_dots] = bwlabeln(bwl);
+            locations=regionprops(lab,'centroid');
+       else  
+        subplot(h1); 
+%         UserInput=1;
+%         while UserInput > 0
+%             UserInput = waitforbuttonpress;      % Wait for click
+%         end
+        CurrentPoint = get(gca,'CurrentPoint');
+        x = CurrentPoint(1);
+        ndots = thresholdfn(round(x*100));
+        subplot(h1)
+        hold on;
+        delete(hxy)
+        hxy = plot(x,ndots,'r+');
+        hold off;
+        delete(htip)
+        htip=text(x,ndots,[' (' num2str(x,'%10.2f') ',' num2str(ndots) ')']);
+        
+        x=thresholds(round(x*100));
+        bwl = ims2 > x;
+        
+        [lab,num_dots] = bwlabeln(bwl);
+        locations=regionprops(lab,'centroid');
+            clear coor;
+            coor=[];
+            for i=1:length(locations),coor(i,:)=locations(i).Centroid;end
+            locations=coor;
+
+            subplot(h3);
+            imagesc(im0);axis square;colormap gray;axis off; 
+            title('click at appropriate x/threshold value at top left figure, or press any key to exit');drawnow;
+            hold on;
+         %   for i=1:2,
+                subplot(h3);        
+                h4=plot(locations(:,1),locations(:,2),'o','MarkerSize',4);  
+                pause(0.2);
+                delete(h4);
+                pause(0.2);        
+         %   end
+            h4=plot(locations(:,1),locations(:,2),'o','MarkerSize',4); 
+            hold off
+    
+    end
+    %SelectionType = get(FigureHandle,'SelectionType');         % Get information about the last button press
+end
+threshold=x;
+if num_dots
+    for i=1:length(locations),coor(i,:)=locations(i).Centroid;end
+    locations=coor;     
+end
+%subplot(1,2,1);
+% y=median(ims,3);
+% imagesc(y);
+% hold on;
+% plot(locations(:,1),locations(:,2),'o','MarkerSize',2);
+
