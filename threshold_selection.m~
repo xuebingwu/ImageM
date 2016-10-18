@@ -102,10 +102,10 @@ while go_on
 %             UserInput = waitforbuttonpress;      % Wait for click
 %         end
         CurrentPoint = get(gca,'CurrentPoint');
-        if CurrentPoint(1) > 1
+        x = CurrentPoint(1);
+        if x > 100
             continue
         end
-        x = CurrentPoint(1)
         ndots = thresholdfn(round(x*100));
         subplot(h1)
         hold on;

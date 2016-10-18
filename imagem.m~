@@ -943,15 +943,15 @@ UserData.channel_name
 for j=channel_start:length(UserData.channel_name),
     % load channel image
     filename = [UserData.channel_name{j} UserData.file_index '.tif'];
-    set(handles.text1,'String',['loading stacks from ' filename ' ...']);
+    set(handles.text1,'String',['loading ' filename ' ...']);
     ims=parse_stack([UserData.path filename],UserData.stack_range(1),UserData.stack_range(2));
     
-    % do not crop image if not specified
+    % do not
     % crop image
-    %set(handles.text1,'String','Cropping each stack ...');drawnow
-    %if ~isempty(UserData.BW)
-    %    ims=gui_crop_stack_poly(ims,UserData.RECT,UserData.BW);
-    %end
+    set(handles.text1,'String','Cropping each stack ...');drawnow
+    if ~isempty(UserData.BW)
+        ims=gui_crop_stack_poly(ims,UserData.RECT,UserData.BW);
+    end
     
     % calculate the number of dots for different thresholds
     [thresholdfn,thresholds,ims2]=calculate_file_threshold_function(handles,ims,UserData.BW,UserData.N,UserData.sigma,UserData.n_thresholds);
@@ -976,9 +976,7 @@ for j=channel_start:length(UserData.channel_name),
         
         % save data
         set(handles.figure1,'UserData',UserData);
-        if length(UserData.channel_name) > 1
-            save_ClickedCallback(hObject, eventdata, handles);
-        end
+        save_ClickedCallback(hObject, eventdata, handles);
     else
         set(handles.text1,'String',['No dots in ' filename])
     end
@@ -1211,26 +1209,14 @@ end
 % close reference image
 close(href)
 
-UserData=get(handles.figure1,'UserData');
-
-if ~isempty(UserData.cell) & ~isempty(UserData.dots)
-    if isempty(UserData.num_dot_cell_channel)
-        assign_dots_to_cells(handles);
-        UserData=get(handles.figure1,'UserData');
-    end
-end
-    
 % update / save data
 UserData.status.changed = 1;
 UserData.status.segmented  = 1;
-enable_components(UserData,handles);
+enable_components(UserData,handles)
 
 set(handles.text1,'String',['saving data ...'])
 save_ClickedCallback(hObject, eventdata, handles);
-set(handles.text1,'String','Data saved');
-
-UserData.num_dot_cell_channel
-
+set(handles.text1,'String','Data saved')
 
 % --------------------------------------------------------------------
 function ProjectionMenu_Callback(hObject, eventdata, handles)
