@@ -1034,7 +1034,7 @@ enable_components(UserData,handles)
 set(handles.figure1,'UserData',UserData);
 save_ClickedCallback(hObject, eventdata, handles);
 
-% segment cells by clicking polygons
+%% segment cells by clicking polygons
 % --------------------------------------------------------------------
 function segment_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to segment (see GCBO)
@@ -1211,15 +1211,6 @@ end
 % close reference image
 close(href)
 
-UserData=get(handles.figure1,'UserData');
-
-if ~isempty(UserData.cell) & ~isempty(UserData.dots)
-    if isempty(UserData.num_dot_cell_channel)
-        assign_dots_to_cells(handles);
-        UserData=get(handles.figure1,'UserData');
-    end
-end
-    
 % update / save data
 UserData.status.changed = 1;
 UserData.status.segmented  = 1;
@@ -1228,6 +1219,12 @@ enable_components(UserData,handles);
 set(handles.text1,'String',['saving data ...'])
 save_ClickedCallback(hObject, eventdata, handles);
 set(handles.text1,'String','Data saved');
+
+
+if ~isempty(UserData.cell) & ~isempty(UserData.dots)
+	assign_dots_to_cells(handles);
+	UserData=get(handles.figure1,'UserData');
+end
 
 UserData.num_dot_cell_channel
 
