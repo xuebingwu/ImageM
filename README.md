@@ -1,7 +1,7 @@
 # ImageM
 A graphic MATLAB program for single molecule RNA FISH
 
-Reference:
+## Reference:
 
 Anna Lyubimova, Shalev Itzkovitz, Jan Philipp Junker, Zi Peng Fan, Xuebing Wu, Alexander van Oudenaarden
 Single-molecule mRNA detection and counting in mammalian tissue
